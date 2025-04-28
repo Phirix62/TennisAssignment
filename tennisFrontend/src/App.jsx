@@ -1,6 +1,8 @@
 import Register from './pages/Register';
 import Login from './pages/Login';
 import AdminDashboard from './pages/AdminDashboard';
+import PlayerDashboard from './pages/PlayerDashboard';
+import RefereeDashboard from './pages/RefereeDashboard';
 import { useState } from 'react';
 
 export default function App() {
@@ -27,14 +29,16 @@ export default function App() {
           <>
             <span>Welcome, {loggedInUser.username} ({loggedInUser.role})</span>
             <button onClick={handleLogout}>Logout</button>
-            {loggedInUser.role === 'admin' && <button onClick={() => setPage('admin')}>Admin Panel</button>}
           </>
         )}
       </div>
 
       {!loggedInUser && page === 'register' && <Register />}
       {!loggedInUser && page === 'login' && <Login onLogin={setLoggedInUser} />}
-      {loggedInUser?.role === 'admin' && page === 'admin' && <AdminDashboard />}
+
+      {loggedInUser?.role === 'admin' && <AdminDashboard />}
+      {loggedInUser?.role === 'player' && <PlayerDashboard username={loggedInUser.username} />}
+      {loggedInUser?.role === 'referee' && <RefereeDashboard username={loggedInUser.username} />}
     </div>
   );
 }

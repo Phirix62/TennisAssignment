@@ -1,6 +1,3 @@
-import { useState } from 'react';
-import api from '../api';
-
 export default function Login({ onLogin }) {
   const [form, setForm] = useState({ username: '', password: '' });
   const [message, setMessage] = useState('');
@@ -15,10 +12,15 @@ export default function Login({ onLogin }) {
       const res = await api.post('/auth/login', form);
       const role = res.data.includes('Admin') ? 'admin'
                   : res.data.includes('Referee') ? 'referee'
-                  : 'player';
+                  : res.data.includes('Player') ? 'player'
+                  : null;
 
-      onLogin({ username: form.username, role });
-      setMessage('Login successful');
+      if (role) {
+        onLogin({ username: form.username, role });
+        setMessage('Login successful');
+      } else {
+        setMessage('Login failed');
+      }
     } catch {
       setMessage('Login failed');
     }
