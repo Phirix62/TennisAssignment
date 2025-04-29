@@ -60,6 +60,5 @@ This is a full-stack web application for managing tennis tournaments, developed 
 - npm run dev
 
 ## Authors
-Nathan (@Phirix62)
-Part of Erasmus semester at UTCN, class assignment
+Nathan (@Phirix62) | Part of Erasmus semester at UTCN, class assignment
 
