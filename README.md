@@ -52,14 +52,14 @@ This is a full-stack web application for managing tennis tournaments, developed 
 
 #### Backend
 # Navigate to backend folder
-cd backend
-./mvnw spring-boot:run || or click button run java on any java file
+- cd backend
+- ./mvnw spring-boot:run || or click button run java on any java file
 
 #### Frontend
 # Navigate to frontend folder
-cd frontend
-npm install
-npm run dev
+- cd frontend
+- npm install
+- npm run dev
 
 ## Authors
 Nathan (@Phirix62)
