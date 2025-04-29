@@ -34,6 +34,10 @@ public class PlayerController {
         TennisPlayer player = (TennisPlayer) userRepo.findByUsername(username).orElseThrow();
         Tournament tournament = tournamentRepo.findById(tournamentId).orElseThrow();
 
+        if (tournament.getPlayers().contains(player)) {
+            return "Player is already registered for this tournament.";
+        }
+
         // Add player to tournament
         tournament.getPlayers().add(player);
         tournamentRepo.save(tournament);
