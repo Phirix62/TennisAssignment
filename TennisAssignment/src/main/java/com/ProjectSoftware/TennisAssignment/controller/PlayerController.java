@@ -9,6 +9,8 @@ import com.ProjectSoftware.TennisAssignment.repository.TournamentRepository;
 import com.ProjectSoftware.TennisAssignment.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.ArrayList;
 import java.util.Collections;
 
 import java.time.LocalDateTime;
@@ -46,10 +48,19 @@ public class PlayerController {
         List<Match> oldMatches = matchRepo.findByTournament(tournament);
         matchRepo.deleteAll(oldMatches);
 
-        // Regenerate matches
+        // Regenerate matches based on tournament format
         List<TennisPlayer> players = tournament.getPlayers();
-        if (players.size() >= 2) {
+        if (players.size() >= 4) { // Minimum players for a pool phase
             Collections.shuffle(players); // Random shuffle
+
+            // Pool phase
+            int poolSize = 4; // Example: 4 players per pool
+            int numberOfPools = (int) Math.ceil((double) players.size() / poolSize);
+            List<List<TennisPlayer>> pools = new java.util.ArrayList<>();
+
+            for (int i = 0; i < numberOfPools; i++) {
+                pools.add(new ArrayList<>(players.subList(i * poolSize, Math.min((i + 1) * poolSize, players.size()))));
+            }
 
             // Get list of referees
             List<Referee> referees = userRepo.findAll().stream()
@@ -61,19 +72,69 @@ public class PlayerController {
                 return "No referees available to assign matches.";
             }
 
-            for (int i = 0; i < players.size() - 1; i += 2) {
-                Match match = new Match();
-                match.setTournament(tournament);
-                match.setPlayer1(players.get(i));
-                match.setPlayer2(players.get(i + 1));
-                match.setMatchTime(LocalDateTime.now().plusDays(i)); // for example
-                match.setReferee(referees.get(i % referees.size())); // assign referees cyclically
-                matchRepo.save(match);
+            // Generate pool matches
+            LocalDateTime startTime = tournament.getStartDate().atTime(8, 0);
+            LocalDateTime endTime = startTime.plusHours(11); // End time is 11 hours after start time
+            for (List<TennisPlayer> pool : pools) {
+                for (int i = 0; i < pool.size(); i++) {
+                    for (int j = i + 1; j < pool.size(); j++) {
+                        if (startTime.getHour() == 12) {
+                            startTime = startTime.plusHours(2); // Skip break time
+                        }
+                        if (startTime.isAfter(endTime)) {
+                            startTime = startTime.withHour(8).plusDays(1); // Move to the next day
+                            endTime = startTime.withHour(19);
+                        }
+
+                        Match match = new Match();
+                        match.setTournament(tournament);
+                        match.setPlayer1(pool.get(i));
+                        match.setPlayer2(pool.get(j));
+                        match.setMatchTime(startTime);
+                        match.setReferee(referees.get((i + j) % referees.size())); // Assign referees cyclically
+                        matchRepo.save(match);
+
+                        startTime = startTime.plusHours(1); // Increment match time
+                    }
+                }
             }
 
-            // If odd number of players: last player waits (no match)
-            if (players.size() % 2 != 0) {
-                // Optionally: inform last player is waiting
+            // Tree phase (knockout)
+            List<TennisPlayer> qualifiedPlayers = pools.stream()
+                    .flatMap(pool -> pool.stream().limit(2)) // Simulate top 2 from each pool
+                    .toList();
+
+
+            startTime = startTime.withHour(8).plusDays(1); // Start tree phase on day 2
+            endTime = startTime.withHour(19);
+
+            while (qualifiedPlayers.size() > 1) {
+                List<TennisPlayer> nextRound = new java.util.ArrayList<>();
+                for (int i = 0; i < qualifiedPlayers.size(); i += 2) {
+                    if (i + 1 < qualifiedPlayers.size()) {
+                        if (startTime.getHour() == 12) {
+                            startTime = startTime.plusHours(2); // Skip break time
+                        }
+                        if (startTime.isAfter(endTime)) {
+                            startTime = startTime.withHour(8).plusDays(1); // Move to next day
+                            endTime = startTime.withHour(19);
+                        }
+
+                        Match match = new Match();
+                        match.setTournament(tournament);
+                        match.setPlayer1(qualifiedPlayers.get(i));
+                        match.setPlayer2(qualifiedPlayers.get(i + 1));
+                        match.setMatchTime(startTime);
+                        match.setReferee(referees.get(i % referees.size())); // Assign referees cyclically
+                        matchRepo.save(match);
+
+                        // Example: winner is the first player (replace with actual logic)
+                        nextRound.add(qualifiedPlayers.get(i));
+
+                        startTime = startTime.plusHours(1); // Increment match time
+                    }
+                }
+                qualifiedPlayers = nextRound;
             }
         }
 
