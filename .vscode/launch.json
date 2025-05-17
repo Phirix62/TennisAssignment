@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-TennisAssignmentApplication<TennisAssignment>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.ProjectSoftware.TennisAssignment.TennisAssignmentApplication",
+            "projectName": "TennisAssignment",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}
