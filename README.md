@@ -36,7 +36,7 @@ This is a full-stack web application for managing tennis tournaments, developed 
 ### Frontend
 - React (with Vite)
 - Axios for API communication
-- Vanilla CSS
+- CSS
 
 ---
 
