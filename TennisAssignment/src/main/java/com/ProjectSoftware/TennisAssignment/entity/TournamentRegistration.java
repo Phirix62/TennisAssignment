@@ -5,6 +5,8 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 @Entity
 @Data
 public class TournamentRegistration {
@@ -13,9 +15,11 @@ public class TournamentRegistration {
     private Long id;
 
     @ManyToOne
+    @JsonIgnoreProperties({"players", "matches", "registrations"})
     private Tournament tournament;
 
     @ManyToOne
+    @JsonIgnoreProperties({"tournaments", "matches"})
     private TennisPlayer player;
 
     private String status; // PENDING, ACCEPTED, REJECTED

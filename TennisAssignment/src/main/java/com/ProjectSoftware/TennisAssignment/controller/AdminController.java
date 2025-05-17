@@ -9,6 +9,8 @@ import com.ProjectSoftware.TennisAssignment.service.MailService;
 import com.ProjectSoftware.TennisAssignment.repository.*;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -76,45 +78,51 @@ public class AdminController {
     }
 
     @PutMapping("/registration/{id}/status")
-public String updateRegistrationStatus(@PathVariable Long id, @RequestParam String status) {
-    TournamentRegistration reg = registrationRepo.findById(id).orElseThrow();
+    public ResponseEntity<String> updateRegistrationStatus(@PathVariable Long id, @RequestParam String status) {
+    Optional<TournamentRegistration> optionalReg = registrationRepo.findById(id);
+    if (optionalReg.isEmpty()) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Registration not found.");
+    }
+
+    TournamentRegistration reg = optionalReg.get();
 
     if (!status.equalsIgnoreCase("ACCEPTED") && !status.equalsIgnoreCase("REJECTED")) {
-        return "Invalid status.";
+        return ResponseEntity.badRequest().body("Invalid status. Must be ACCEPTED or REJECTED.");
     }
 
     reg.setStatus(status.toUpperCase());
     registrationRepo.save(reg);
 
     if (status.equalsIgnoreCase("ACCEPTED")) {
-        // Add to tournament player list
         Tournament t = reg.getTournament();
         TennisPlayer p = reg.getPlayer();
         t.getPlayers().add(p);
         tournamentRepo.save(t);
 
-        // Optional: Check if enough players → generate matches
         if (t.getPlayers().size() >= 4 && allRegistrationsAccepted(t)) {
             tournamentService.generateTournamentMatches(t);
         }
     }
 
-    if (status.equalsIgnoreCase("ACCEPTED") || status.equalsIgnoreCase("REJECTED")) {
-        mailService.sendRegistrationDecision(
-            reg.getPlayer().getEmail(),
-            reg.getPlayer().getFullName(),
-            reg.getTournament().getName(),
-            status
-        );
+    try {
+    mailService.sendRegistrationDecision(
+        reg.getPlayer().getEmail(),
+        reg.getPlayer().getFullName(),
+        reg.getTournament().getName(),
+        status
+    );
+    } catch (Exception e) {
+        e.printStackTrace(); // optional: log
+        return ResponseEntity.status(HttpStatus.OK).body("Registration updated, but email could not be sent.");
     }
 
-    return "Registration " + status.toUpperCase();
+    return ResponseEntity.ok("Registration " + status.toUpperCase());
 }
 
-private boolean allRegistrationsAccepted(Tournament tournament) {
-    return registrationRepo.findByTournament(tournament).stream()
-            .allMatch(r -> r.getStatus().equals("ACCEPTED"));
-}
+    private boolean allRegistrationsAccepted(Tournament tournament) {
+        return registrationRepo.findByTournament(tournament).stream()
+                .allMatch(r -> r.getStatus().equals("ACCEPTED"));
+    }
 
     @GetMapping("/registrations")
     public List<TournamentRegistration> getAllRegistrations() {
