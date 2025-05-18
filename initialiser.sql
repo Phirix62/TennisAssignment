@@ -1,5 +1,6 @@
 DELETE FROM `match`;
 DELETE FROM tournament_players;
+DELETE FROM tournament_registration;
 DELETE FROM tournament;
 DELETE FROM user;
 

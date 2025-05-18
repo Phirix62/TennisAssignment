@@ -13,5 +13,7 @@ public interface MatchRepository extends JpaRepository<Match, Long> {
     List<Match> findByPlayer1OrPlayer2(TennisPlayer p1, TennisPlayer p2);
     List<Match> findByReferee(Referee referee);
     List<Match> findByTournament(Tournament tournament);
+    long countByPlayer1OrPlayer2(TennisPlayer p1, TennisPlayer p2);
+
 
 }
